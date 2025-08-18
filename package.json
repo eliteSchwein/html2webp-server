@@ -1,0 +1,38 @@
+{
+  "name": "html2webp-server",
+  "version": "1.0.0",
+  "description": "convert html to image",
+  "homepage": "https://github.com/eliteSchwein/html2webp-server#readme",
+  "bugs": {
+    "url": "https://github.com/eliteSchwein/html2webp-server/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eliteSchwein/html2webp-server.git"
+  },
+  "license": "ISC",
+  "author": "tludwig-dev",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "esbuild src/App.ts --tree-shaking=true --target=es2020 --bundle --minify --color=true --platform=node --outfile=dist/index.js",
+    "start": "node dist/index.js --max-old-space-size=1024 --expose-gc"
+  },
+  "dependencies": {
+    "@types/body-parser": "^1.19.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.12",
+    "@types/readline-sync": "^1.4.8",
+    "async-wait-until": "^2.0.27",
+    "bytes": "^3.1.2",
+    "colorts": "^0.1.63",
+    "cors": "^2.8.5",
+    "esbuild": "^0.25.6",
+    "express": "^5.1.0",
+    "js-conf-parser": "^1.0.3",
+    "puppeteer": "^24.16.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
