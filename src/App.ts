@@ -5,6 +5,13 @@ import cors from "cors";
 import { logRegular, logSuccess } from "./helper/LogHelper";
 import * as packageConfig from "../package.json";
 
+type ConvertBody = {
+    html: string;
+    width?: number;
+    height?: number;
+    dpr?: number;
+};
+
 init().catch((err) => {
     console.error(err);
     process.exit(1);
@@ -63,13 +70,42 @@ async function init() {
     webServer.get("/healthz", (_req, res) => res.status(200).send("ok"));
 
     webServer.post("/convert", async (req, res) => {
-        // Example expected body:
-        // { html: "<html>...</html>", width: 1200, height: 800, dpr: 2 }
-        console.log(req.body);
+        const body = (req.body ?? {}) as Partial<ConvertBody>;
 
-        // leaving conversion logic out since you didn’t ask,
-        // but this is where you’d call page.setContent(...) + page.screenshot({type:"webp"})
-        res.status(200).json({ ok: true });
+        try {
+            if (typeof body.html !== "string" || body.html.trim() === "") {
+                res.status(400).json({ error: "Body must include non-empty 'html' string." });
+                return;
+            }
+
+            const width = Number.isFinite(body.width as any) ? Number(body.width) : 1200;
+            const height = Number.isFinite(body.height as any) ? Number(body.height) : 800;
+            const dpr = Number.isFinite(body.dpr as any) ? Number(body.dpr) : 2;
+
+            const page = await browser.newPage();
+            try {
+                await page.setViewport({ width, height, deviceScaleFactor: dpr });
+
+                // Render the provided HTML
+                await page.setContent(body.html, { waitUntil: "networkidle0" });
+
+                // Screenshot as WEBP and return raw bytes
+                const buf = await page.screenshot({
+                    type: "webp",
+                    fullPage: true,
+                    quality: 90,
+                });
+
+                res.status(200);
+                res.setHeader("Content-Type", "image/webp");
+                res.send(buf);
+            } finally {
+                await page.close();
+            }
+        } catch (err: any) {
+            console.error(err);
+            res.status(500).json({ error: err?.message ?? "convert failed" });
+        }
     });
 
     const server = webServer.listen(PORT, HOST, () => {
