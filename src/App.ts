@@ -47,7 +47,12 @@ async function init() {
 
     const browser = await puppeteer.launch({
         headless: HEADLESS as any,
-        args: NO_SANDBOX ? ["--no-sandbox", "--disable-setuid-sandbox"] : [],
+        acceptInsecureCerts: true,
+        args: [
+            ...(NO_SANDBOX ? ["--no-sandbox", "--disable-setuid-sandbox"] : []),
+            "--ignore-certificate-errors",
+            "--allow-insecure-localhost",
+        ],
     });
 
     logRegular("Launch express instance");
