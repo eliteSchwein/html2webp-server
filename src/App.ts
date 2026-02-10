@@ -1,36 +1,89 @@
-import parseConfig from "js-conf-parser";
-import puppeteer from 'puppeteer';
-import {logRegular, logSuccess} from "./helper/LogHelper";
-import * as packageConfig from '../package.json'
-import express, {Express} from "express";
-import cors from 'cors';
+import "dotenv/config"; // optional: loads .env in local dev (harmless in prod)
+import puppeteer from "puppeteer";
+import express from "express";
+import cors from "cors";
+import { logRegular, logSuccess } from "./helper/LogHelper";
+import * as packageConfig from "../package.json";
 
-init()
+init().catch((err) => {
+    console.error(err);
+    process.exit(1);
+});
+
+function envBool(name: string, fallback: boolean) {
+    const v = process.env[name];
+    if (v === undefined) return fallback;
+    return ["1", "true", "yes", "on"].includes(v.toLowerCase());
+}
+
+function envNum(name: string, fallback: number) {
+    const v = process.env[name];
+    if (!v) return fallback;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+}
 
 async function init() {
-    logSuccess(`Starting html2webp-server ${packageConfig.version}...`)
-    const config = parseConfig(`${__dirname}/..`, ".env.conf")
+    logSuccess(`Starting html2webp-server ${packageConfig.version}...`);
 
-    logRegular(`Launch puppeteer/chromium instance`)
+    // ---- ENV CONFIG ----
+    const HOST = process.env.HOST ?? "0.0.0.0";
+    const PORT = envNum("PORT", 3000);
 
-    const browser = await puppeteer.launch({headless: true})
+    const CORS_ORIGIN = process.env.CORS_ORIGIN ?? "*";
 
-    logRegular(`Launch express instance`)
+    // Puppeteer / Chrome flags (important for Docker)
+    const HEADLESS = process.env.HEADLESS ?? "new"; // "new" recommended; or "true"
+    const NO_SANDBOX = envBool("NO_SANDBOX", true);
 
-    const webServer = express()
+    logRegular("Launch puppeteer/chromium instance");
 
-    webServer.use(cors({
-        origin: '*', // Allow all origins
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allow all HTTP methods
-        allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'], // Allow all common headers
-        credentials: true, // Optional: Allow cookies to be included in requests
-    }))
+    const browser = await puppeteer.launch({
+        headless: HEADLESS as any,
+        args: NO_SANDBOX ? ["--no-sandbox", "--disable-setuid-sandbox"] : [],
+    });
 
-    webServer.listen(config.server.port, config.server.ip, () => {
-        logSuccess('web server is ready')
-    })
+    logRegular("Launch express instance");
 
-    webServer.post('/convert', (req, res) => {
-        console.log(req.body)
-    })
+    const webServer = express();
+
+    // Parse JSON bodies (otherwise req.body will be undefined)
+    webServer.use(express.json({ limit: "2mb" }));
+    webServer.use(express.urlencoded({ extended: true }));
+
+    webServer.use(
+        cors({
+            origin: CORS_ORIGIN,
+            methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            allowedHeaders: ["Content-Type", "Authorization", "Origin", "X-Requested-With", "Accept"],
+            credentials: false, // use true only if you really need cookies
+        })
+    );
+
+    webServer.get("/healthz", (_req, res) => res.status(200).send("ok"));
+
+    webServer.post("/convert", async (req, res) => {
+        // Example expected body:
+        // { html: "<html>...</html>", width: 1200, height: 800, dpr: 2 }
+        console.log(req.body);
+
+        // leaving conversion logic out since you didn’t ask,
+        // but this is where you’d call page.setContent(...) + page.screenshot({type:"webp"})
+        res.status(200).json({ ok: true });
+    });
+
+    const server = webServer.listen(PORT, HOST, () => {
+        logSuccess(`web server is ready on http://${HOST}:${PORT}`);
+    });
+
+    // Graceful shutdown
+    const shutdown = async () => {
+        logRegular("Shutting down...");
+        server.close(() => logRegular("HTTP server closed"));
+        await browser.close();
+        process.exit(0);
+    };
+
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
 }
