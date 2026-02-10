@@ -1,4 +1,4 @@
-name: Security Audit (scheduled)
+name: Security Audit
 
 on:
   schedule:
@@ -46,7 +46,7 @@ jobs:
           SHA="${SHA_FULL:0:7}"
           RUN_URL="${GITHUB_SERVER_URL:-}/$REPO/actions/runs/${GITHUB_RUN_ID:-}"
 
-          CONTENT="🚨 **Scheduled security audit failed**\\nRepo: \`$REPO\`\\nRef: \`$REF\`\\nCommit: \`$SHA\`\\nRun: $RUN_URL"
+          CONTENT="🚨 **Security audit failed**\\nRepo: \`$REPO\`\\nRef: \`$REF\`\\nCommit: \`$SHA\`\\nRun: $RUN_URL"
           CONTENT_ESCAPED="${CONTENT//\"/\\\"}"
 
           curl -sS -X POST \
