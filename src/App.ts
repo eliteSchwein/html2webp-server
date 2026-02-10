@@ -52,6 +52,8 @@ async function init() {
             ...(NO_SANDBOX ? ["--no-sandbox", "--disable-setuid-sandbox"] : []),
             "--ignore-certificate-errors",
             "--allow-insecure-localhost",
+            "--disable-web-security",
+            "--disable-features=IsolateOrigins,site-per-process",
         ],
     });
 
