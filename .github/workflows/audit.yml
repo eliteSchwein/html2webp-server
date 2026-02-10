@@ -26,7 +26,7 @@ jobs:
         run: npm ci
 
       - name: Audit
-        run: npm audit --audit-level=moderate
+        run: npm audit --audit-level=high
 
       # Optional but useful for TS projects:
       - name: Build
