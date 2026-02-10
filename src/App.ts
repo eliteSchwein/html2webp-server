@@ -96,6 +96,15 @@ async function init() {
                 // Render the provided HTML
                 await page.setContent(body.html, { waitUntil: "networkidle0" });
 
+                // wait till everything is loaded
+                await page.evaluate(async () => {
+                    // @ts-ignore
+                    if (document.fonts?.ready) {
+                        // @ts-ignore
+                        await document.fonts.ready;
+                    }
+                });
+
                 // Screenshot as WEBP and return raw bytes
                 const buf = await page.screenshot({
                     type: "webp",
