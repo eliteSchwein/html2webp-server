@@ -46,6 +46,7 @@ async function init() {
     logRegular("Launch puppeteer/chromium instance");
 
     const browser = await puppeteer.launch({
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
         headless: HEADLESS as any,
         acceptInsecureCerts: true,
         args: [
