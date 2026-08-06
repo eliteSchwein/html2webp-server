@@ -22,7 +22,7 @@
     "@types/body-parser": "^1.19.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "@types/node": "^25.9.3",
+    "@types/node": "^26.1.2",
     "@types/readline-sync": "^1.4.8",
     "async-wait-until": "^2.0.31",
     "bytes": "^3.1.2",
@@ -31,12 +31,12 @@
     "dotenv": "^17.4.2",
     "esbuild": "^0.28.1",
     "express": "^5.2.1",
-    "puppeteer": "^25.1.0",
+    "puppeteer": "^25.5.0",
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "allowScripts": {
-    "esbuild@0.28.1": true,
-    "puppeteer@25.1.0": true
+    "esbuild": true,
+    "puppeteer": true
   }
 }
